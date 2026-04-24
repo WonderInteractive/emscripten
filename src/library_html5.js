@@ -258,9 +258,6 @@ var LibraryHTML5 = {
 
   $registerKeyEventCallback__deps: ['$JSEvents', '$findEventTarget', '$stringToUTF8', 'malloc'],
   $registerKeyEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     JSEvents.keyEvent ||= _malloc({{{ C_STRUCTS.EmscriptenKeyboardEvent.__size__ }}});
 
     var keyEventHandlerFunc = (e) => {
@@ -268,11 +265,7 @@ var LibraryHTML5 = {
       assert(e);
 #endif
 
-#if PTHREADS
-      var keyEventData = targetThread ? _malloc({{{ C_STRUCTS.EmscriptenKeyboardEvent.__size__ }}}) : JSEvents.keyEvent; // This allocated block is passed as satellite data to the proxied function call, so the call frees up the data block when done.
-#else
       var keyEventData = JSEvents.keyEvent;
-#endif
       {{{ makeSetValue('keyEventData', C_STRUCTS.EmscriptenKeyboardEvent.timestamp, 'e.timeStamp', 'double') }}};
 
       var idx = {{{ getHeapOffset('keyEventData', 'i32') }}};
@@ -290,12 +283,8 @@ var LibraryHTML5 = {
       stringToUTF8(e.code || '', keyEventData + {{{ C_STRUCTS.EmscriptenKeyboardEvent.code }}}, {{{ cDefs.EM_HTML5_SHORT_STRING_LEN_BYTES }}});
       stringToUTF8(e.char || '', keyEventData + {{{ C_STRUCTS.EmscriptenKeyboardEvent.charValue }}}, {{{ cDefs.EM_HTML5_SHORT_STRING_LEN_BYTES }}});
       stringToUTF8(e.locale || '', keyEventData + {{{ C_STRUCTS.EmscriptenKeyboardEvent.locale }}}, {{{ cDefs.EM_HTML5_SHORT_STRING_LEN_BYTES }}});
-
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, keyEventData, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, keyEventData, userData)) e.preventDefault();
+	  _proxyKeyboardEvent(eventTypeId, BigInt(JSEvents.keyEvent));
+      //if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, keyEventData, userData)) e.preventDefault();
     };
 
     var eventHandler = {
@@ -513,9 +502,6 @@ var LibraryHTML5 = {
 
   $registerMouseEventCallback__deps: ['$JSEvents', '$fillMouseEventData', '$findEventTarget', 'malloc'],
   $registerMouseEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     JSEvents.mouseEvent ||= _malloc({{{ C_STRUCTS.EmscriptenMouseEvent.__size__ }}});
     target = findEventTarget(target);
 
@@ -523,14 +509,7 @@ var LibraryHTML5 = {
       // TODO: Make this access thread safe, or this could update live while app is reading it.
       fillMouseEventData(JSEvents.mouseEvent, e, target);
 
-#if PTHREADS
-      if (targetThread) {
-        var mouseEventData = _malloc({{{ C_STRUCTS.EmscriptenMouseEvent.__size__ }}}); // This allocated block is passed as satellite data to the proxied function call, so the call frees up the data block when done.
-        fillMouseEventData(mouseEventData, e, target);
-        __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, mouseEventData, userData);
-      } else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, JSEvents.mouseEvent, userData)) e.preventDefault();
+      _proxyMouseEvent(eventTypeId, BigInt(JSEvents.mouseEvent)); e.preventDefault();
     };
 
     var eventHandler = {
@@ -604,28 +583,17 @@ var LibraryHTML5 = {
 
   $registerWheelEventCallback__deps: ['$JSEvents', '$fillMouseEventData', '$findEventTarget', 'malloc'],
   $registerWheelEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     JSEvents.wheelEvent ||= _malloc({{{ C_STRUCTS.EmscriptenWheelEvent.__size__ }}});
 
     // The DOM Level 3 events spec event 'wheel'
     var wheelHandlerFunc = (e = event) => {
-#if PTHREADS
-      var wheelEvent = targetThread ? _malloc({{{ C_STRUCTS.EmscriptenWheelEvent.__size__ }}}) : JSEvents.wheelEvent; // This allocated block is passed as satellite data to the proxied function call, so the call frees up the data block when done.
-#else
       var wheelEvent = JSEvents.wheelEvent;
-#endif
       fillMouseEventData(wheelEvent, e, target);
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaX, 'e["deltaX"]', 'double') }}};
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaY, 'e["deltaY"]', 'double') }}};
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaZ, 'e["deltaZ"]', 'double') }}};
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaMode, 'e["deltaMode"]', 'i32') }}};
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, wheelEvent, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, wheelEvent, userData)) e.preventDefault();
+	  _proxyMouseEvent(eventTypeId, BigInt(wheelEvent)); e.preventDefault();
     };
 #if MIN_SAFARI_VERSION < 60100 // Browsers that do not support https://caniuse.com/#feat=mdn-api_wheelevent
     // The 'mousewheel' event as implemented in Safari 6.0.5
@@ -751,28 +719,17 @@ var LibraryHTML5 = {
 
   $registerFocusEventCallback__deps: ['$JSEvents', '$findEventTarget', 'malloc', '$stringToUTF8'],
   $registerFocusEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     JSEvents.focusEvent ||= _malloc({{{ C_STRUCTS.EmscriptenFocusEvent.__size__ }}});
 
     var focusEventHandlerFunc = (e = event) => {
       var nodeName = JSEvents.getNodeNameForTarget(e.target);
       var id = e.target.id ? e.target.id : '';
 
-#if PTHREADS
-      var focusEvent = targetThread ? _malloc({{{ C_STRUCTS.EmscriptenFocusEvent.__size__ }}}) : JSEvents.focusEvent;
-#else
       var focusEvent = JSEvents.focusEvent;
-#endif
       stringToUTF8(nodeName, focusEvent + {{{ C_STRUCTS.EmscriptenFocusEvent.nodeName }}}, {{{ cDefs.EM_HTML5_LONG_STRING_LEN_BYTES }}});
       stringToUTF8(id, focusEvent + {{{ C_STRUCTS.EmscriptenFocusEvent.id }}}, {{{ cDefs.EM_HTML5_LONG_STRING_LEN_BYTES }}});
 
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, focusEvent, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, focusEvent, userData)) e.preventDefault();
+      _proxyFocusEvent(eventTypeId); e.preventDefault();
     };
 
     var eventHandler = {
@@ -1609,24 +1566,12 @@ var LibraryHTML5 = {
 
   $registerPointerlockChangeEventCallback__deps: ['$JSEvents', '$fillPointerlockChangeEventData', '$findEventTarget', 'malloc'],
   $registerPointerlockChangeEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     JSEvents.pointerlockChangeEvent ||= _malloc({{{ C_STRUCTS.EmscriptenPointerlockChangeEvent.__size__ }}});
 
     var pointerlockChangeEventHandlerFunc = (e = event) => {
-#if PTHREADS
-      var pointerlockChangeEvent = targetThread ? _malloc({{{ C_STRUCTS.EmscriptenPointerlockChangeEvent.__size__ }}}) : JSEvents.pointerlockChangeEvent;
-#else
       var pointerlockChangeEvent = JSEvents.pointerlockChangeEvent;
-#endif
       fillPointerlockChangeEventData(pointerlockChangeEvent);
-
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, pointerlockChangeEvent, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, pointerlockChangeEvent, userData)) e.preventDefault();
+	  _proxyPointerLockEvent(eventTypeId, BigInt(JSEvents.pointerlockChangeEvent)); e.preventDefault();
     };
 
     var eventHandler = {

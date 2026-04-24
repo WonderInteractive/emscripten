@@ -470,7 +470,8 @@ var SyscallsLibrary = {
     for (var i = 0; i < num; i++) {
       var iovbase = {{{ makeGetValue('iov', `(${C_STRUCTS.iovec.__size__} * i) + ${C_STRUCTS.iovec.iov_base}`, POINTER_TYPE) }}};
       var iovlen = {{{ makeGetValue('iov', `(${C_STRUCTS.iovec.__size__} * i) + ${C_STRUCTS.iovec.iov_len}`, 'i32') }}};
-      for (var j = 0; j < iovlen; j++) {
+      for (var jj = 0; jj < iovlen; jj++) {
+      	const j = BigInt(jj);
         view[offset++] = {{{ makeGetValue('iovbase', 'j', 'i8') }}};
       }
     }
@@ -480,7 +481,8 @@ var SyscallsLibrary = {
   __syscall_recvmsg__deps: ['$getSocketFromFD', '$writeSockaddr', '$DNS'],
   __syscall_recvmsg: (fd, message, flags, d1, d2, d3) => {
     var sock = getSocketFromFD(fd);
-    var iov = {{{ makeGetValue('message', C_STRUCTS.msghdr.msg_iov, POINTER_TYPE) }}};
+    var _iov = {{{ makeGetValue('message', C_STRUCTS.msghdr.msg_iov, POINTER_TYPE) }}};
+    var iov = Number(_iov);
     var num = {{{ makeGetValue('message', C_STRUCTS.msghdr.msg_iovlen, 'i32') }}};
     // get the total amount of data we can read across all arrays
     var total = 0;
@@ -518,7 +520,7 @@ var SyscallsLibrary = {
       }
       var length = Math.min(iovlen, bytesRemaining);
       var buf = msg.buffer.subarray(bytesRead, bytesRead + length);
-      HEAPU8.set(buf, iovbase + bytesRead);
+      HEAPU8.set(buf, Number(iovbase) + bytesRead);
       bytesRead += length;
       bytesRemaining -= length;
     }

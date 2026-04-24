@@ -64,6 +64,8 @@ def get_base_cflags(force_object_files=False, preprocess=True):
   flags = ['-g', '-sSTRICT', '-Werror']
   if settings.LTO and not force_object_files:
     flags += ['-flto=' + settings.LTO]
+    if settings.LTO == 'full':
+      flags += ['-fsplit-lto-unit', '-Wno-unused-command-line-argument']
   if settings.RELOCATABLE:
     flags += ['-sRELOCATABLE']
     if preprocess:
@@ -1552,8 +1554,7 @@ class crtbegin(MuslInternalLibrary):
 class libcxxabi(NoExceptLibrary, MTLibrary, DebugLibrary):
   name = 'libc++abi'
   cflags = [
-      '-Oz',
-      '-fno-inline-functions',
+      '-O3',
       '-D_LIBCPP_BUILDING_LIBRARY',
       '-D_LIBCXXABI_BUILDING_LIBRARY',
       '-DLIBCXXABI_NON_DEMANGLING_TERMINATE',

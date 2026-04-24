@@ -210,6 +210,8 @@
 #    define ASAN_SHADOW_OFFSET_CONST 0x0000400000000000
 #  elif SANITIZER_WINDOWS64
 #    define ASAN_SHADOW_OFFSET_DYNAMIC
+#  elif SANITIZER_EMSCRIPTEN
+#    define ASAN_SHADOW_OFFSET_CONST 0x20000000
 #  else
 #    if ASAN_SHADOW_SCALE != 3
 #      error "Value below is based on shadow scale = 3."

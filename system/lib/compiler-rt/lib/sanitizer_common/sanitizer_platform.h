@@ -307,7 +307,7 @@
 #  elif defined(__mips64) || defined(__hexagon__)
 #    define SANITIZER_CAN_USE_ALLOCATOR64 0
 #  else
-#    define SANITIZER_CAN_USE_ALLOCATOR64 (SANITIZER_WORDSIZE == 64)
+#    define SANITIZER_CAN_USE_ALLOCATOR64 (SANITIZER_WORDSIZE == 64 && !SANITIZER_EMSCRIPTEN)
 #  endif
 #endif
 

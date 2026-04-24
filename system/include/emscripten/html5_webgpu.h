@@ -22,7 +22,6 @@ void emscripten_webgpu_release_js_handle(int js_handle);
   int emscripten_webgpu_export_##snake_case(WGPU##CamelCase);
 
 WEBGPU_MAKE_IMPORT_EXPORT(surface, Surface)
-WEBGPU_MAKE_IMPORT_EXPORT(swap_chain, SwapChain)
 
 WEBGPU_MAKE_IMPORT_EXPORT(device, Device)
 WEBGPU_MAKE_IMPORT_EXPORT(queue, Queue)

@@ -297,19 +297,19 @@ var LibraryWebGPU = {
       {{{ gpu.makeCheckDescriptor('ptr') }}}
       return {
         "texture": WebGPU.mgrTexture.get(
-          {{{ makeGetValue('ptr', C_STRUCTS.WGPUImageCopyTexture.texture, '*') }}}),
-        "mipLevel": {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUImageCopyTexture.mipLevel) }}},
-        "origin": WebGPU.makeOrigin3D(ptr + {{{ C_STRUCTS.WGPUImageCopyTexture.origin }}}),
-        "aspect": WebGPU.TextureAspect[{{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUImageCopyTexture.aspect) }}}],
+          {{{ makeGetValue('ptr', C_STRUCTS.WGPUTexelCopyTextureInfo.texture, '*') }}}),
+        "mipLevel": {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTexelCopyTextureInfo.mipLevel) }}},
+        "origin": WebGPU.makeOrigin3D(ptr + {{{ C_STRUCTS.WGPUTexelCopyTextureInfo.origin }}}),
+        "aspect": WebGPU.TextureAspect[{{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTexelCopyTextureInfo.aspect) }}}],
       };
     },
 
     makeTextureDataLayout: (ptr) => {
       {{{ gpu.makeCheckDescriptor('ptr') }}}
-      var bytesPerRow = {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTextureDataLayout.bytesPerRow) }}};
-      var rowsPerImage = {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTextureDataLayout.rowsPerImage) }}};
+      var bytesPerRow = {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTexelCopyBufferLayout.bytesPerRow) }}};
+      var rowsPerImage = {{{ gpu.makeGetU32('ptr', C_STRUCTS.WGPUTexelCopyBufferLayout.rowsPerImage) }}};
       return {
-        "offset": {{{ gpu.makeGetU64('ptr', C_STRUCTS.WGPUTextureDataLayout.offset) }}},
+        "offset": {{{ gpu.makeGetU64('ptr', C_STRUCTS.WGPUTexelCopyBufferLayout.offset) }}},
         "bytesPerRow": bytesPerRow === {{{ gpu.COPY_STRIDE_UNDEFINED }}} ? undefined : bytesPerRow,
         "rowsPerImage": rowsPerImage === {{{ gpu.COPY_STRIDE_UNDEFINED }}} ? undefined : rowsPerImage,
       };
@@ -317,10 +317,10 @@ var LibraryWebGPU = {
 
     makeImageCopyBuffer: (ptr) => {
       {{{ gpu.makeCheckDescriptor('ptr') }}}
-      var layoutPtr = ptr + {{{ C_STRUCTS.WGPUImageCopyBuffer.layout }}};
+      var layoutPtr = ptr + {{{ C_STRUCTS.WGPUTexelCopyBufferInfo.layout }}};
       var bufferCopyView = WebGPU.makeTextureDataLayout(layoutPtr);
       bufferCopyView["buffer"] = WebGPU.mgrBuffer.get(
-        {{{ makeGetValue('ptr', C_STRUCTS.WGPUImageCopyBuffer.buffer, '*') }}});
+        {{{ makeGetValue('ptr', C_STRUCTS.WGPUTexelCopyBufferInfo.buffer, '*') }}});
       return bufferCopyView;
     },
 
@@ -356,7 +356,7 @@ var LibraryWebGPU = {
     },
 
     fillLimitStruct: (limits, supportedLimitsOutPtr) => {
-      var limitsOutPtr = supportedLimitsOutPtr + {{{ C_STRUCTS.WGPUSupportedLimits.limits }}};
+      var limitsOutPtr = supportedLimitsOutPtr + {{{ C_STRUCTS.WGPULimits.limits }}};
 
       function setLimitValueU32(name, limitOffset) {
         var limitValue = limits[name];
@@ -1680,9 +1680,9 @@ var LibraryWebGPU = {
 
       return {
         "querySet": WebGPU.mgrQuerySet.get(
-          {{{ makeGetValue('twPtr', C_STRUCTS.WGPUComputePassTimestampWrites.querySet, '*') }}}),
-        "beginningOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUComputePassTimestampWrites.beginningOfPassWriteIndex) }}},
-        "endOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUComputePassTimestampWrites.endOfPassWriteIndex) }}},
+          {{{ makeGetValue('twPtr', C_STRUCTS.WGPUPassTimestampWrites.querySet, '*') }}}),
+        "beginningOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUPassTimestampWrites.beginningOfPassWriteIndex) }}},
+        "endOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUPassTimestampWrites.endOfPassWriteIndex) }}},
       };
     }
 
@@ -1771,9 +1771,9 @@ var LibraryWebGPU = {
 
       return {
         "querySet": WebGPU.mgrQuerySet.get(
-          {{{ makeGetValue('twPtr', C_STRUCTS.WGPURenderPassTimestampWrites.querySet, '*') }}}),
-        "beginningOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPURenderPassTimestampWrites.beginningOfPassWriteIndex) }}},
-        "endOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPURenderPassTimestampWrites.endOfPassWriteIndex) }}},
+          {{{ makeGetValue('twPtr', C_STRUCTS.WGPUPassTimestampWrites.querySet, '*') }}}),
+        "beginningOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUPassTimestampWrites.beginningOfPassWriteIndex) }}},
+        "endOfPassWriteIndex": {{{ gpu.makeGetU32('twPtr', C_STRUCTS.WGPUPassTimestampWrites.endOfPassWriteIndex) }}},
       };
     }
 

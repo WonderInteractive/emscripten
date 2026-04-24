@@ -210,7 +210,45 @@ var LibraryTracing = {
   },
 
   emscripten_trace_record_allocation: (address, size) => {
-    Module['onMalloc']?.(address, size);
+    let return_addresses = function() {
+      let convertFrameToPCWasmOnly = (frame) => {
+        assert(wasmOffsetConverter);
+        var match;
+    
+        if (match = /\bwasm-function\[\d+\]:(0x[0-9a-f]+)/.exec(frame)) {
+          // some engines give the binary offset directly, so we use that as return address
+          return +match[1];
+        } else if (match = /\bwasm-function\[(\d+)\]:(\d+)/.exec(frame)) {
+          // other engines only give function index and offset in the function,
+          // so we try using the offset converter. If that doesn't work,
+          // we pack index and offset into a "return address"
+          return wasmOffsetConverter.convert(+match[1], +match[2]);
+        }
+        // return 0 if we can't find any
+        return 0;
+      }
+      let callstack = new Error().stack.toString().split('\n');
+      if (callstack[0] == 'Error') {
+        callstack.shift();
+      }
+      let level = 0;
+      let results = [];
+      for (let i = 0; i < callstack.length; i++) {
+        let caller = callstack[level + 3 + i];
+        let PC = convertFrameToPCWasmOnly(caller)
+        if (PC) {
+          results.push(PC);
+        }
+      }
+		while (results.length < 8) {
+			results.push(0);
+		}
+		return results.slice(0, 8);
+    }
+    //console.error('emscripten_trace_record_allocation', return_addresses());
+    //console.log('emscripten_trace_record_allocation', address, size);
+    let stack = return_addresses();
+    Module.["_onMalloc"]?.(BigInt(address), size, stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], stack[7]);
     if (EmscriptenTrace.postEnabled) {
       var now = EmscriptenTrace.now();
       EmscriptenTrace.post([EmscriptenTrace.EVENT_ALLOCATE,
@@ -219,7 +257,42 @@ var LibraryTracing = {
   },
 
   emscripten_trace_record_reallocation: (old_address, new_address, size) => {
-    Module['onRealloc']?.(old_address, new_address, size);
+    let return_addresses = function() {
+      let convertFrameToPCWasmOnly = (frame) => {
+        assert(wasmOffsetConverter);
+        var match;
+    
+        if (match = /\bwasm-function\[\d+\]:(0x[0-9a-f]+)/.exec(frame)) {
+          // some engines give the binary offset directly, so we use that as return address
+          return +match[1];
+        } else if (match = /\bwasm-function\[(\d+)\]:(\d+)/.exec(frame)) {
+          // other engines only give function index and offset in the function,
+          // so we try using the offset converter. If that doesn't work,
+          // we pack index and offset into a "return address"
+          return wasmOffsetConverter.convert(+match[1], +match[2]);
+        }
+        // return 0 if we can't find any
+        return 0;
+      }
+      let callstack = new Error().stack.toString().split('\n');
+      if (callstack[0] == 'Error') {
+        callstack.shift();
+      }
+      let level = 0;
+      let results = [];
+      for (let i = 0; i < callstack.length; i++) {
+        let caller = callstack[level + 3 + i];
+        let PC = convertFrameToPCWasmOnly(caller)
+        if (PC) {
+          results.push(PC);
+        }
+      }
+      return results;
+    }
+    //console.error('emscripten_trace_record_allocation', return_addresses());
+    //console.log('emscripten_trace_record_allocation', address, size);
+    let stack = return_addresses();
+    Module['_onRealloc']?.(BigInt(old_address), BigInt(new_address), size, stack[0], stack[1], stack[2], stack[3], stack[4], stack[5], stack[6], stack[7]);
     if (EmscriptenTrace.postEnabled) {
       var now = EmscriptenTrace.now();
       EmscriptenTrace.post([EmscriptenTrace.EVENT_REALLOCATE,
@@ -228,7 +301,7 @@ var LibraryTracing = {
   },
 
   emscripten_trace_record_free: (address) => {
-    Module['onFree']?.(address);
+    Module['_onFree']?.(BigInt(address));
     if (EmscriptenTrace.postEnabled) {
       var now = EmscriptenTrace.now();
       EmscriptenTrace.post([EmscriptenTrace.EVENT_FREE,

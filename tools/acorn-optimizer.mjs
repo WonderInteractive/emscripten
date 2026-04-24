@@ -1090,6 +1090,8 @@ function isEmscriptenHEAP(name) {
     case 'HEAPU16':
     case 'HEAP32':
     case 'HEAPU32':
+    //case 'HEAP64':
+    //case 'HEAPU64':
     case 'HEAPF32':
     case 'HEAPF64': {
       return true;
@@ -1411,6 +1413,16 @@ function asanify(ast) {
             makeCallExpression(node, '_asan_js_store_4u', [ptr, value]);
             break;
           }
+          /*
+          case 'HEAP64': {
+            makeCallExpression(node, '_asan_js_store_8', [ptr, value]);
+            break;
+          }
+          case 'HEAPU64': {
+            makeCallExpression(node, '_asan_js_store_8u', [ptr, value]);
+            break;
+          }
+            */
           case 'HEAPF32': {
             makeCallExpression(node, '_asan_js_store_f', [ptr, value]);
             break;
@@ -1458,6 +1470,16 @@ function asanify(ast) {
             makeCallExpression(node, '_asan_js_load_4u', [ptr]);
             break;
           }
+          /*
+          case 'HEAP64': {
+            makeCallExpression(node, '_asan_js_load_8', [ptr]);
+            break;
+          }
+          case 'HEAPU64': {
+            makeCallExpression(node, '_asan_js_load_8u', [ptr]);
+            break;
+          }
+          */
           case 'HEAPF32': {
             makeCallExpression(node, '_asan_js_load_f', [ptr]);
             break;
@@ -1527,6 +1549,15 @@ function safeHeap(ast) {
               multiply(ptr, 4),
               value,
               createLiteral(4),
+            ]);
+            break;
+          }
+          case 'HEAP64':
+          case 'HEAPU64': {
+            makeCallExpression(node, 'SAFE_HEAP_STORE', [
+              multiply(ptr, 8),
+              value,
+              createLiteral(8),
             ]);
             break;
           }

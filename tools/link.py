@@ -1653,9 +1653,6 @@ def phase_linker_setup(options, state):  # noqa: C901, PLR0912, PLR0915
       # by SAFE_HEAP as a null pointer dereference.
       exit_with_error('ASan does not work with SAFE_HEAP')
 
-    if settings.MEMORY64:
-      exit_with_error('MEMORY64 does not yet work with ASAN')
-
   if settings.USE_ASAN or settings.SAFE_HEAP:
     # ASan and SAFE_HEAP check address 0 themselves
     settings.CHECK_NULL_WRITES = 0

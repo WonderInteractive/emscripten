@@ -732,7 +732,9 @@ var LibraryPThread = {
       try {
         if (name == '#canvas') {
           if (!Module['canvas']) {
+#if ASSERTIONS
             err(`pthread_create: could not find canvas with ID "${name}" to transfer to thread!`);
+#endif
             error = {{{ cDefs.EINVAL }}};
             break;
           }
@@ -748,7 +750,9 @@ var LibraryPThread = {
         } else if (!ENVIRONMENT_IS_PTHREAD) {
           var canvas = (Module['canvas'] && Module['canvas'].id === name) ? Module['canvas'] : document.querySelector(name);
           if (!canvas) {
+#if ASSERTIONS
             err(`pthread_create: could not find canvas with ID "${name}" to transfer to thread!`);
+#endif
             error = {{{ cDefs.EINVAL }}};
             break;
           }

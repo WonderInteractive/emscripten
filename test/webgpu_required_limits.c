@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <webgpu/webgpu.h>
 
-WGPUSupportedLimits adapter_supported_limits = {
+WGPULimits adapter_supported_limits = {
   0,
 };
 
@@ -52,7 +52,7 @@ void on_device_request_ended(WGPURequestDeviceStatus status,
                              void* userdata) {
   assert(status == WGPURequestDeviceStatus_Success);
 
-  WGPUSupportedLimits device_supported_limits;
+  WGPULimits device_supported_limits;
   wgpuDeviceGetLimits(device, &device_supported_limits);
 
   // verify that the obtained device fullfils required limits 

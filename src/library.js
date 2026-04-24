@@ -958,7 +958,9 @@ addToLibrary({
       {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_family, 'family', 'i32') }}};
       {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_socktype, 'type', 'i32') }}};
       {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_protocol, 'proto', 'i32') }}};
-      {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_canonname, 'canon', '*') }}};
+      if (canon) {
+        {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_canonname, 'canon', '*') }}};
+      }
       {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_addr, 'sa', '*') }}};
       if (family === {{{ cDefs.AF_INET6 }}}) {
         {{{ makeSetValue('ai', C_STRUCTS.addrinfo.ai_addrlen, C_STRUCTS.sockaddr_in6.__size__, 'i32') }}};
@@ -1400,6 +1402,31 @@ addToLibrary({
   _emscripten_get_now_is_monotonic__internal: true,
   _emscripten_get_now_is_monotonic__deps: ['$nowIsMonotonic'],
   _emscripten_get_now_is_monotonic: () => nowIsMonotonic,
+
+  // In a browser without cross origin isolation, SharedArrayBuffer is deleted
+  // from the global scope:
+  // https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
+  // However, it says:
+  //
+  // > Web developers can still get at the constructor through
+  // > `new WebAssembly.Memory({ shared:true, initial:0, maximum:0}).buffer.constructor`.
+  //
+  // That is what we are up to here. Use an IIFE to avoid shadowing
+  // SharedArrayBuffer globally.
+
+	__emscripten_atomics_sleep__postset: `
+    var SABConstructor = new WebAssembly.Memory({"shared":true,"initial":0,"maximum":0}).buffer.constructor;
+    var waitBuffer = new Int32Array(new SABConstructor(4));
+    var _supports_atomics_wait;
+    try {
+      ___emscripten_atomics_sleep(0);
+      _supports_atomics_wait = true;
+    } catch (e) {
+      _supports_atomics_wait = false;
+    }
+  `,
+  __emscripten_atomics_sleep__internal: true,
+  __emscripten_atomics_sleep: (ms) => Atomics.wait(waitBuffer, 0, 0, ms),
 
   $warnOnce: (text) => {
     warnOnce.shown ||= {};

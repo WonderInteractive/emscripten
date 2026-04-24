@@ -317,13 +317,13 @@ function addOnPostRun(cb) {
 // the dependencies are met.
 var runDependencies = 0;
 var dependenciesFulfilled = null; // overridden to take different actions when all run dependencies are fulfilled
-#if ASSERTIONS
+#if ASSERTIONS && 0
 var runDependencyTracking = {};
 var runDependencyWatcher = null;
 #endif
 
 function getUniqueRunDependency(id) {
-#if ASSERTIONS
+#if ASSERTIONS && 0
   var orig = id;
   while (1) {
     if (!runDependencyTracking[id]) return id;
@@ -341,7 +341,7 @@ function addRunDependency(id) {
   Module['monitorRunDependencies']?.(runDependencies);
 #endif
 
-#if ASSERTIONS
+#if ASSERTIONS && 0
   if (id) {
     assert(!runDependencyTracking[id]);
     runDependencyTracking[id] = 1;
@@ -379,7 +379,7 @@ function removeRunDependency(id) {
   Module['monitorRunDependencies']?.(runDependencies);
 #endif
 
-#if ASSERTIONS
+#if ASSERTIONS && 0
   if (id) {
     assert(runDependencyTracking[id]);
     delete runDependencyTracking[id];
@@ -388,7 +388,7 @@ function removeRunDependency(id) {
   }
 #endif
   if (runDependencies == 0) {
-#if ASSERTIONS
+#if ASSERTIONS && 0
     if (runDependencyWatcher !== null) {
       clearInterval(runDependencyWatcher);
       runDependencyWatcher = null;
@@ -808,7 +808,10 @@ async function instantiateAsync(binary, binaryFile, imports) {
 #endif
      ) {
     try {
-      var response = fetch(binaryFile, {{{ makeModuleReceiveExpr('fetchSettings', "{ credentials: 'same-origin' }") }}});
+		  const fetchWithProgress = (window.parent && window.parent.fetchWithProgress)
+				? window.parent.fetchWithProgress
+				: fetch;
+		  var response = fetchWithProgress(binaryFile, {{{ makeModuleReceiveExpr('fetchSettings', "{ credentials: 'same-origin' }") }}});
 #if USE_OFFSET_CONVERTER
       // We need the wasm binary for the offset converter. Clone the response
       // in order to get its arrayBuffer (cloning should be more efficient

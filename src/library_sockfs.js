@@ -170,6 +170,7 @@ addToLibrary({
             // The default value is 'ws://' the replace is needed because the compiler replaces '//' comments with '#'
             // comments without checking context, so we'd end up with ws:#, the replace swaps the '#' for '//' again.
             var url = '{{{ WEBSOCKET_URL }}}'.replace('#', '//');
+            //url = 'wss://' wndr-todo: needed?
             // Make the WebSocket subprotocol (Sec-WebSocket-Protocol) default to binary if no configuration is set.
             var subProtocols = '{{{ WEBSOCKET_SUBPROTOCOL }}}'; // The default value is 'binary'
             // The default WebSocket options

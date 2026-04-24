@@ -23,26 +23,34 @@
 // and therefore we must shift to get the actual pointer. Doing it this way
 // lets us behave the same as JS would wrt shifts and alignment.
 
-int32_t _asan_c_load_1(int8_t* ptr) {
+int64_t _asan_c_load_1(int8_t* ptr) {
   return *ptr;
 }
-uint32_t _asan_c_load_1u(uint8_t* ptr) {
+uint64_t _asan_c_load_1u(uint8_t* ptr) {
   return *ptr;
 }
-int32_t _asan_c_load_2(uintptr_t shifted) {
+int64_t _asan_c_load_2(uintptr_t shifted) {
   int16_t* ptr = (int16_t*)(shifted << 1);
   return *ptr;
 }
-uint32_t _asan_c_load_2u(uintptr_t shifted) {
+uint64_t _asan_c_load_2u(uintptr_t shifted) {
   uint16_t* ptr = (uint16_t*)(shifted << 1);
   return *ptr;
 }
-int32_t _asan_c_load_4(uintptr_t shifted) {
+int64_t _asan_c_load_4(uintptr_t shifted) {
   int32_t* ptr = (int32_t*)(shifted << 2);
   return *ptr;
 }
-uint32_t _asan_c_load_4u(uintptr_t shifted) {
+int64_t _asan_c_load_8(uintptr_t shifted) {
+  int64_t* ptr = (int64_t*)(shifted << 3);
+  return *ptr;
+}
+uint64_t _asan_c_load_4u(uintptr_t shifted) {
   uint32_t* ptr = (uint32_t*)(shifted << 2);
+  return *ptr;
+}
+uint64_t _asan_c_load_8u(uintptr_t shifted) {
+  uint64_t* ptr = (uint64_t*)(shifted << 3);
   return *ptr;
 }
 float _asan_c_load_f(uintptr_t shifted) {
@@ -57,26 +65,34 @@ double _asan_c_load_d(uintptr_t shifted) {
 // Note that the stores return the value, which is what JS does, as you can
 // do
 //     x = HEAP32[..] = val;
-int32_t _asan_c_store_1(int8_t* ptr, int8_t val) {
+int64_t _asan_c_store_1(int8_t* ptr, int8_t val) {
   return *ptr = val;
 }
-uint32_t _asan_c_store_1u(uint8_t* ptr, uint8_t val) {
+uint64_t _asan_c_store_1u(uint8_t* ptr, uint8_t val) {
   return *ptr = val;
 }
-int32_t _asan_c_store_2(uintptr_t shifted, int16_t val) {
+int64_t _asan_c_store_2(uintptr_t shifted, int16_t val) {
   int16_t* ptr = (int16_t*)(shifted << 1);
   return *ptr = val;
 }
-uint32_t _asan_c_store_2u(uintptr_t shifted, uint16_t val) {
+uint64_t _asan_c_store_2u(uintptr_t shifted, uint16_t val) {
   uint16_t* ptr = (uint16_t*)(shifted << 1);
   return *ptr = val;
 }
-int32_t _asan_c_store_4(uintptr_t shifted, int32_t val) {
+int64_t _asan_c_store_4(uintptr_t shifted, int32_t val) {
   int32_t* ptr = (int32_t*)(shifted << 2);
   return *ptr = val;
 }
-uint32_t _asan_c_store_4u(uintptr_t shifted, uint32_t val) {
+uint64_t _asan_c_store_4u(uintptr_t shifted, uint32_t val) {
   uint32_t* ptr = (uint32_t*)(shifted << 2);
+  return *ptr = val;
+}
+int64_t _asan_c_store_8(uintptr_t shifted, int64_t val) {
+  int64_t* ptr = (int64_t*)(shifted << 3);
+  return *ptr = val;
+}
+uint64_t _asan_c_store_8u(uintptr_t shifted, uint64_t val) {
+  uint64_t* ptr = (uint64_t*)(shifted << 3);
   return *ptr = val;
 }
 float _asan_c_store_f(uintptr_t shifted, float val) {
