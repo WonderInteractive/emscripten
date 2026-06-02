@@ -7,6 +7,29 @@
 assert(SHARED_MEMORY);
 
 addToLibrary({
+  // wndr: __emscripten_atomics_sleep — polyfill that uses Atomics.wait on a
+  // private SharedArrayBuffer. In a browser without cross origin isolation
+  // SharedArrayBuffer is deleted from the global scope:
+  //   https://html.spec.whatwg.org/multipage/webappapis.html#creating-a-new-javascript-realm
+  // but the constructor remains accessible via WebAssembly.Memory's buffer:
+  //   `new WebAssembly.Memory({shared:true, initial:0, maximum:0}).buffer.constructor`
+  // The postset probes once whether Atomics.wait is allowed on the main thread
+  // (it isn't in non-COI contexts) and stores the result for later branching.
+  __emscripten_atomics_sleep__postset: `
+    var SABConstructor = new WebAssembly.Memory({"shared":true,"initial":0,"maximum":0}).buffer.constructor;
+    var waitBuffer = new Int32Array(new SABConstructor(4));
+    var _supports_atomics_wait;
+    try {
+      ___emscripten_atomics_sleep(0);
+      _supports_atomics_wait = true;
+    } catch (e) {
+      _supports_atomics_wait = false;
+    }
+  `,
+  __emscripten_atomics_sleep__internal: true,
+  __emscripten_atomics_sleep: (ms) => Atomics.wait(waitBuffer, 0, 0, ms),
+
+
 // Chrome 87 shipped Atomics.waitAsync:
 //   https://www.chromestatus.com/feature/6243382101803008
 // However its implementation is faulty:

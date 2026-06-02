@@ -267,9 +267,6 @@ var LibraryHTML5 = {
   $registerKeyEventCallback__noleakcheck: true,
   $registerKeyEventCallback__deps: ['$JSEvents', '$findEventTarget', '$stringToUTF8', 'malloc'],
   $registerKeyEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     var eventSize = {{{ C_STRUCTS.EmscriptenKeyboardEvent.__size__ }}};
     JSEvents.keyEvent ||= _malloc(eventSize);
 
@@ -297,11 +294,9 @@ var LibraryHTML5 = {
       stringToUTF8(e.char || '', keyEventData + {{{ C_STRUCTS.EmscriptenKeyboardEvent.charValue }}}, {{{ cDefs.EM_HTML5_SHORT_STRING_LEN_BYTES }}});
       stringToUTF8(e.locale || '', keyEventData + {{{ C_STRUCTS.EmscriptenKeyboardEvent.locale }}}, {{{ cDefs.EM_HTML5_SHORT_STRING_LEN_BYTES }}});
 
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, keyEventData, eventSize, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, keyEventData, userData)) e.preventDefault();
+      // wndr: route input via SAB ring instead of pthread postMessage proxy.
+      // Keyboard intentionally does NOT preventDefault — browser shortcuts pass through.
+      _proxyKeyboardEvent(eventTypeId, BigInt(JSEvents.keyEvent));
     };
 
     var eventHandler = {
@@ -500,9 +495,6 @@ var LibraryHTML5 = {
   $registerMouseEventCallback__noleakcheck: true,
   $registerMouseEventCallback__deps: ['$JSEvents', '$fillMouseEventData', '$findEventTarget', 'malloc'],
   $registerMouseEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     var eventSize = {{{ C_STRUCTS.EmscriptenMouseEvent.__size__ }}};
     JSEvents.mouseEvent ||= _malloc(eventSize);
     target = findEventTarget(target);
@@ -511,12 +503,9 @@ var LibraryHTML5 = {
       // TODO: Make this access thread safe, or this could update live while app is reading it.
       fillMouseEventData(JSEvents.mouseEvent, e, target);
 
-#if PTHREADS
-      if (targetThread) {
-        __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, JSEvents.mouseEvent, eventSize, userData);
-      } else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, JSEvents.mouseEvent, userData)) e.preventDefault();
+      // wndr: route input via SAB ring instead of pthread postMessage proxy.
+      _proxyMouseEvent(eventTypeId, BigInt(JSEvents.mouseEvent));
+      e.preventDefault();
     };
 
     var eventHandler = {
@@ -591,9 +580,6 @@ var LibraryHTML5 = {
   $registerWheelEventCallback__noleakcheck: true,
   $registerWheelEventCallback__deps: ['$JSEvents', '$fillMouseEventData', 'malloc'],
   $registerWheelEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     var eventSize = {{{ C_STRUCTS.EmscriptenWheelEvent.__size__ }}};
     JSEvents.wheelEvent ||= _malloc(eventSize)
 
@@ -605,11 +591,9 @@ var LibraryHTML5 = {
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaY, 'e["deltaY"]', 'double') }}};
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaZ, 'e["deltaZ"]', 'double') }}};
       {{{ makeSetValue('wheelEvent', C_STRUCTS.EmscriptenWheelEvent.deltaMode, 'e["deltaMode"]', 'i32') }}};
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, wheelEvent, eventSize, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, wheelEvent, userData)) e.preventDefault();
+      // wndr: route input via SAB ring instead of pthread postMessage proxy.
+      _proxyMouseEvent(eventTypeId, BigInt(wheelEvent));
+      e.preventDefault();
     };
 
     var eventHandler = {
@@ -714,9 +698,6 @@ var LibraryHTML5 = {
   $registerFocusEventCallback__noleakcheck: true,
   $registerFocusEventCallback__deps: ['$JSEvents', '$findEventTarget', 'malloc', '$stringToUTF8'],
   $registerFocusEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     var eventSize = {{{ C_STRUCTS.EmscriptenFocusEvent.__size__ }}};
     JSEvents.focusEvent ||= _malloc(eventSize);
 
@@ -728,11 +709,9 @@ var LibraryHTML5 = {
       stringToUTF8(nodeName, focusEvent + {{{ C_STRUCTS.EmscriptenFocusEvent.nodeName }}}, {{{ cDefs.EM_HTML5_LONG_STRING_LEN_BYTES }}});
       stringToUTF8(id, focusEvent + {{{ C_STRUCTS.EmscriptenFocusEvent.id }}}, {{{ cDefs.EM_HTML5_LONG_STRING_LEN_BYTES }}});
 
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, focusEvent, eventSize, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, focusEvent, userData)) e.preventDefault();
+      // wndr: route input via SAB ring instead of pthread postMessage proxy.
+      _proxyFocusEvent(eventTypeId);
+      e.preventDefault();
     };
 
     var eventHandler = {
@@ -1536,9 +1515,6 @@ var LibraryHTML5 = {
   $registerPointerlockChangeEventCallback__noleakcheck: true,
   $registerPointerlockChangeEventCallback__deps: ['$JSEvents', '$fillPointerlockChangeEventData', 'malloc'],
   $registerPointerlockChangeEventCallback: (target, userData, useCapture, callbackfunc, eventTypeId, eventTypeString, targetThread) => {
-#if PTHREADS
-    targetThread = JSEvents.getTargetThreadForEventCallback(targetThread);
-#endif
     var eventSize = {{{ C_STRUCTS.EmscriptenPointerlockChangeEvent.__size__ }}};
     JSEvents.pointerlockChangeEvent ||= _malloc(eventSize);
 
@@ -1546,11 +1522,9 @@ var LibraryHTML5 = {
       var pointerlockChangeEvent = JSEvents.pointerlockChangeEvent;
       fillPointerlockChangeEventData(pointerlockChangeEvent);
 
-#if PTHREADS
-      if (targetThread) __emscripten_run_callback_on_thread(targetThread, callbackfunc, eventTypeId, pointerlockChangeEvent, eventSize, userData);
-      else
-#endif
-      if ({{{ makeDynCall('iipp', 'callbackfunc') }}}(eventTypeId, pointerlockChangeEvent, userData)) e.preventDefault();
+      // wndr: route input via SAB ring instead of pthread postMessage proxy.
+      _proxyPointerLockEvent(eventTypeId, BigInt(JSEvents.pointerlockChangeEvent));
+      e.preventDefault();
     };
 
     var eventHandler = {

@@ -402,7 +402,7 @@ function getHeapOffset(offset, type) {
     return `((${offset})/${sz})`;
   }
   const shifts = Math.log(sz) / Math.LN2;
-  if (CAN_ADDRESS_2GB) {
+  if (CAN_ADDRESS_2GB || MEMORY64 == 2) {
     return `((${offset})>>>${shifts})`;
   }
   return `((${offset})>>${shifts})`;

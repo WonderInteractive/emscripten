@@ -277,17 +277,7 @@ uptr __asan_region_is_poisoned(uptr beg, uptr size) {
   return 0;
 }
 
-#define CHECK_SMALL_REGION(p, size, isWrite)                  \
-  do {                                                        \
-    uptr __p = reinterpret_cast<uptr>(p);                     \
-    uptr __size = size;                                       \
-    if (UNLIKELY(__asan::AddressIsPoisoned(__p) ||            \
-        __asan::AddressIsPoisoned(__p + __size - 1))) {       \
-      GET_CURRENT_PC_BP_SP;                                   \
-      uptr __bad = __asan_region_is_poisoned(__p, __size);    \
-      __asan_report_error(pc, bp, sp, __bad, isWrite, __size, 0);\
-    }                                                         \
-  } while (false)
+#define CHECK_SMALL_REGION(p, size, isWrite)
 
 
 extern "C" SANITIZER_INTERFACE_ATTRIBUTE
