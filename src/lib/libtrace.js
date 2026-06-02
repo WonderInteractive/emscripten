@@ -239,7 +239,7 @@ var LibraryTracing = {
   },
 
   emscripten_trace_record_free: (address) => {
-    Module['onFree']?.(address);
+    Module['_onFree']?.(BigInt(address));
     if (EmscriptenTrace.postEnabled) {
       var now = EmscriptenTrace.now();
       EmscriptenTrace.post([EmscriptenTrace.EVENT_FREE,

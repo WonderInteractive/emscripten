@@ -255,15 +255,15 @@ weak int __syscall_prlimit64(int pid, int resource, intptr_t new_limit, intptr_t
   return 0;
 }
 
-weak int __syscall_setsockopt(int sockfd, int level, int optname, intptr_t optval, size_t optlen, int dummy) {
-  REPORT(setsockopt);
-  return -ENOPROTOOPT; // The option is unknown at the level indicated.
-}
-
+// wndr: __syscall_setsockopt and __syscall_shutdown are intentionally NOT
+// defined here so that the wasm import resolves to our JS-lib stubs in
+// libsyscall.js (which return 0 = silent success). Otherwise the weak
+// definitions below would satisfy the import inside the wasm module and
+// emscripten's JS linker would never see a need to include the JS versions,
+// leaving the noisy `unsupported syscall` warnings firing for every call.
 UNIMPLEMENTED(acct, (intptr_t filename))
 UNIMPLEMENTED(mincore, (intptr_t addr, size_t length, intptr_t vec))
 UNIMPLEMENTED(recvmmsg, (int sockfd, intptr_t msgvec, size_t vlen, int flags, ...))
 UNIMPLEMENTED(sendmmsg, (int sockfd, intptr_t msgvec, size_t vlen, int flags, ...))
-UNIMPLEMENTED(shutdown, (int sockfd, int how, int dummy, int dummy2, int dummy3, int dummy4))
 UNIMPLEMENTED(socketpair, (int domain, int type, int protocol, intptr_t fds, int dummy, int dummy2))
 UNIMPLEMENTED(wait4,(int pid, intptr_t wstatus, int options, int rusage))

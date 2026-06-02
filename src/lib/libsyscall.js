@@ -386,11 +386,12 @@ var SyscallsLibrary = {
     sock.sock_ops.connect(sock, info.addr, info.port);
     return 0;
   },
-  __syscall_shutdown__deps: ['$getSocketFromFD'],
-  __syscall_shutdown: (fd, how) => {
-    getSocketFromFD(fd);
-    return -{{{ cDefs.ENOSYS }}}; // unsupported feature
-  },
+  // wndr: silent no-op success. UE calls these for SO_REUSEADDR / TCP_NODELAY
+  // and graceful socket shutdown. On web sockets there's no equivalent (we use
+  // WebSocket lifecycle), but failing them logs a warning and may break UE
+  // socket-init paths. Pretend success — UE proceeds with default behaviour.
+  __syscall_setsockopt: (fd, level, optname, optval, optlen, d1) => 0,
+  __syscall_shutdown: (fd, how) => 0,
   __syscall_accept4__deps: ['$getSocketFromFD', '$writeSockaddr', '$DNS'],
   __syscall_accept4: (fd, addr, addrlen, flags, d1, d2) => {
     var sock = getSocketFromFD(fd);
@@ -528,7 +529,7 @@ var SyscallsLibrary = {
       }
       var length = Math.min(iovlen, bytesRemaining);
       var buf = msg.buffer.subarray(bytesRead, bytesRead + length);
-      HEAPU8.set(buf, iovbase + bytesRead);
+      HEAPU8.set(buf, Number(iovbase) + bytesRead);
       bytesRead += length;
       bytesRemaining -= length;
     }

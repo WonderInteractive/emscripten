@@ -313,6 +313,7 @@ sigs = {
   _embind_register_value_object__sig: 'vpppppp',
   _embind_register_value_object_field__sig: 'vpppppppppp',
   _embind_register_void__sig: 'vpp',
+  _emscripten_atomics_sleep__sig: 'vd',
   _emscripten_create_audio_worklet__sig: 'viipipp',
   _emscripten_create_wasm_worker__sig: 'iipi',
   _emscripten_dlopen_js__sig: 'vpppp',

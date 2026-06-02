@@ -786,7 +786,10 @@ var LibraryPThread = {
       try {
         if (name == '#canvas') {
           if (!Module['canvas']) {
-            err(`pthread_create: could not find canvas with ID "${name}" to transfer to thread!`);
+            // wndr: silenced. Common benign case — Module.canvas was already
+            // transferred to an earlier pthread (canvas can only be moved
+            // once). Subsequent pthread_create calls with '#canvas' get
+            // EINVAL; engine code handles this gracefully. No log spam.
             error = {{{ cDefs.EINVAL }}};
             break;
           }
@@ -802,7 +805,7 @@ var LibraryPThread = {
         } else if (!ENVIRONMENT_IS_PTHREAD) {
           var canvas = (Module['canvas'] && Module['canvas'].id === name) ? Module['canvas'] : document.querySelector(name);
           if (!canvas) {
-            err(`pthread_create: could not find canvas with ID "${name}" to transfer to thread!`);
+            // wndr: silenced — same rationale as the '#canvas' branch above.
             error = {{{ cDefs.EINVAL }}};
             break;
           }
@@ -1033,6 +1036,11 @@ var LibraryPThread = {
 #endif
 #if ASSERTIONS
     assert(!(funcIndex && emAsmAddr));
+    // wndr-debug: surface what dispatch failed before the assert blows up.
+    if (!func) {
+      err('[wndr] proxy dispatch: func undefined. funcIndex=' + funcIndex + ' emAsmAddr=' + emAsmAddr + ' table.len=' + proxiedFunctionTable.length + ' callArgs.len=' + proxiedJSCallArgs.length);
+    }
+    assert(func, '[wndr] proxy func undefined — see preceding err()');
     assert(func.length == proxiedJSCallArgs.length, 'Call args mismatch in _emscripten_receive_on_main_thread_js');
 #endif
     PThread.currentProxiedOperationCallerThread = callingThread;
